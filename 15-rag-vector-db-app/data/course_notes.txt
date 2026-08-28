@@ -1,0 +1,15 @@
+Ashok IT offers GEN AI and Agentic AI with Python training.
+
+The course includes Python basics, OpenAI API, Gemini API, Ollama, LangChain, LlamaIndex, RAG, Vector Databases, Agentic AI, FastAPI, Streamlit, and real-time projects.
+
+Students will get live classes, backup videos, LMS access, soft copy material, doubt clarification, and course completion certificate.
+
+The course is suitable for beginners, working professionals, Python developers, Java developers, testers, and students who want to enter the AI field.
+
+RAG means Retrieval-Augmented Generation. It helps AI models answer questions using external documents.
+
+Vector databases store embeddings. Embeddings are numerical representations of text.
+
+ChromaDB is a beginner-friendly vector database used to store and search text embeddings.
+
+Ollama is used to run large language models locally on our system.
