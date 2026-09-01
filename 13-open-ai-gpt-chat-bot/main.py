@@ -1,28 +1,38 @@
-from fastapi import FastAPI
-from pydantic import BaseModel
+from openai import OpenAI
+from dotenv import load_dotenv
+import os
 
-app = FastAPI()
 
-@app.get("/")
-def home():
-    return {"message" : "Welcome to FAST API"}
+# ============================================================
+# Load Environment Variables
+# ============================================================
 
-@app.get("/course")
-def get_course():
-    return {
-        "course" : "GEN AI & Agentic AI with Python",
-        "duration" : "3 Months",
-        "trainer" : "Mr. Ashok"
-    }
+load_dotenv()
 
-class Student(BaseModel):
-    name: str
-    email: str
-    phno: int
 
-@app.post("/student")
-def add_student(student: Student):
-    return {
-        "message" : "Student added successfully",
-        "student_data" : student
-    }
+# ============================================================
+# Read OpenAI API Key
+# ============================================================
+
+api_key = os.getenv("OPENAI_API_KEY")
+
+
+# ============================================================
+# Create OpenAI Client
+# ============================================================
+
+client = OpenAI(api_key=api_key)
+
+
+# ============================================================
+# Function to Call GPT Model
+# ============================================================
+
+def ask_gpt(input):
+
+    response = client.responses.create(
+        model="gpt-5-mini",
+        input=input
+    )
+
+    return response.output_text
