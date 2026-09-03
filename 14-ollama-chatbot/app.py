@@ -2,60 +2,47 @@ import streamlit as st
 from ollama_service import ask_ollama
 
 
+# ============================================================
+# Page Configuration
+# ============================================================
+
 st.set_page_config(
-    page_title="Ollama Gen AI Chatbot",
+    page_title="Ollama Chatbot",
     page_icon="🤖",
     layout="centered"
 )
 
-st.title("🤖 Gen AI Chatbot using Ollama")
-st.write("Ask anything. This chatbot runs using a local Ollama model.")
+
+# ============================================================
+# Page Header
+# ============================================================
+
+st.title("🤖 Ollama Chatbot")
+st.caption("Powered by Llama 3.2")
 
 
-# Store chat history in session
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {
-            "role": "system",
-            "content": "You are a helpful AI assistant. Explain clearly and simply."
-        }
-    ]
+# ============================================================
+# Chat Input
+# ============================================================
+
+question = st.chat_input("Ask me anything...")
 
 
-# Display previous messages
-for message in st.session_state.messages:
-    if message["role"] != "system":
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
+# ============================================================
+# Process Question
+# ============================================================
 
+if question:
 
-# Take user input
-user_question = st.chat_input("Ask your question here...")
-
-
-if user_question:
-    # Display user message
+    # User message
     with st.chat_message("user"):
-        st.write(user_question)
+        st.write(question)
 
-    # Add user message to history
-    st.session_state.messages.append(
-        {
-            "role": "user",
-            "content": user_question
-        }
-    )
-
-    # Get AI response
+    # Assistant message
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            ai_response = ask_ollama(st.session_state.messages)
-            st.write(ai_response)
 
-    # Add assistant response to history
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": ai_response
-        }
-    )
+        with st.spinner("Thinking..."):
+
+            answer = ask_ollama(question)
+
+        st.write(answer)
