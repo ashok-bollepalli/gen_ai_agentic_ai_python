@@ -1,64 +1,46 @@
 import os
+
 import chromadb
-from sentence_transformers import SentenceTransformer
 
+from dotenv import load_dotenv
+from openai import OpenAI
 
-# Step 1: Load embedding model
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+# load env variables
+load_dotenv()
 
+# get api key
+api_key = os.getenv("OPENAI_API_KEY")
 
-# Step 2: Read text file
-def read_file(file_path):
-    with open(file_path, "r", encoding="utf-8") as file:
-        return file.read()
+# Create OpenAI Client
+client = OpenAI(api_key=api_key)
 
+# Create Persistent ChromaDB Client
+chroma_client = chromadb.PersistentClient(path ="./chroma_db")
 
-# Step 3: Split text into chunks
-def split_text(text, chunk_size=500, overlap=50):
-    chunks = []
-    start = 0
+# Create or get collection
+collection = chroma_client.get_or_create_collection(name="company_documents")
 
-    while start < len(text):
-        end = start + chunk_size
-        chunk = text[start:end]
-        chunks.append(chunk)
-        start = end - overlap
+# read document
+with open("documents/company.txt", "r", encoding="utf-8") as file:
+    document = file.read()
 
-    return chunks
+    # split document into chunks
+    chunks = document.split("\n\n")
 
-
-# Step 4: Create embeddings
-def create_embedding(text):
-    embedding = embedding_model.encode(text)
-    return embedding.tolist()
-
-
-# Step 5: Store chunks in ChromaDB
-def store_in_chromadb(chunks):
-    client = chromadb.PersistentClient(path="chroma_db")
-
-    collection = client.get_or_create_collection(name="course_notes")
+    #Generate embeddings and store them
 
     for index, chunk in enumerate(chunks):
-        embedding = create_embedding(chunk)
-
-        collection.add(
-            documents=[chunk],
-            embeddings=[embedding],
-            ids=[f"chunk_{index}"]
+        response = client.embeddings.create(
+            model = "text-embedding-3-small",
+            input = chunk,
         )
 
-    print("Data stored successfully in ChromaDB")
+        embedding = response.data[0].embedding
 
+        collection.add(
+            ids =[f"chunk-{index}"],
+            documents = [chunk],
+            embeddings = embedding
+        )
 
-# Main execution
-if __name__ == "__main__":
-    file_path = os.path.join("data", "course_notes.txt")
-
-    text = read_file(file_path)
-
-    chunks = split_text(text)
-
-    store_in_chromadb(chunks)
-
-    print("Ingestion completed successfully")
+print("Document successfully stored in ChromaDB.")
