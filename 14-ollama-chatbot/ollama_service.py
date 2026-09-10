@@ -1,16 +1,15 @@
 import ollama
 
-MODEL_NAME="llama3.2"
+MODEL_NAME = "llama3.2:latest"
 
-def ask_ollama(message):
-
-    """
-        Send given message to ollama modela and generate ai response
-    """
-
+def ask_ollama(question):
     response = ollama.chat(
-        model = MODEL_NAME,
-        messages= message
+        model=MODEL_NAME,
+        messages=[
+            {
+                "role": "user",
+                "content": question
+            }
+        ]
     )
-
     return response["message"]["content"]

@@ -1,20 +1,17 @@
 import kagglehub
 import tensorflow as tf
-
 from tensorflow.keras import layers, models
-
 
 # ============================================================
 # 1. DOWNLOAD DATASET
 # ============================================================
 
 path = kagglehub.dataset_download(
-    "aleemaparakatta/cats-and-dogs-mini-dataset"
+     "aleemaparakatta/cats-and-dogs-mini-dataset"
 )
 
 print("Dataset downloaded to:")
 print(path)
-
 
 # ============================================================
 # 2. DATASET PATH
@@ -53,7 +50,6 @@ validation_dataset = tf.keras.utils.image_dataset_from_directory(
     batch_size=batch_size
 )
 
-
 # ============================================================
 # 4. CHECK CLASSES
 # ============================================================
@@ -68,48 +64,26 @@ print(train_dataset.class_names)
 
 model = models.Sequential([
 
-    # Input image
-    layers.Input(
-        shape=(128, 128, 3)
-    ),
+    # input image
+    layers.Input(shape=(img_height, img_width, 3)),
 
-    # Convert pixels from 0-255 to 0-1
-    layers.Rescaling(
-        1.0 / 255
-    ),
+    # Convert pixes from 0-255 to 0-1
+    layers.Rescaling(1.0/255),
 
-    # CNN Layer 1
-    layers.Conv2D(
-        32,
-        (3, 3),
-        activation="relu"
-    ),
-
+    # CNN Layer - 1
+    layers.Conv2D(32, (3, 3), activation='relu'),
     layers.MaxPooling2D(),
 
-    # CNN Layer 2
-    layers.Conv2D(
-        64,
-        (3, 3),
-        activation="relu"
-    ),
-
+    # CNN Layer - 2
+    layers.Conv2D(64, (3, 3), activation='relu'),
     layers.MaxPooling2D(),
 
     # Convert feature maps into one-dimensional data
     layers.Flatten(),
 
-    # Fully connected layer
-    layers.Dense(
-        64,
-        activation="relu"
-    ),
+    layers.Dense(64, activation='relu'),
 
-    # Output: Cat or Dog
-    layers.Dense(
-        1,
-        activation="sigmoid"
-    )
+    layers.Dense(1, activation='sigmoid'),
 ])
 
 
@@ -119,28 +93,25 @@ model = models.Sequential([
 
 model.summary()
 
-
 # ============================================================
 # 7. COMPILE MODEL
 # ============================================================
 
 model.compile(
-    optimizer="adam",
-    loss="binary_crossentropy",
-    metrics=["accuracy"]
+    optimizer='adam',
+    loss='binary_crossentropy',
+    metrics=['accuracy'],
 )
-
 
 # ============================================================
 # 8. TRAIN MODEL
 # ============================================================
 
-history = model.fit(
+model.fit(
     train_dataset,
     validation_data=validation_dataset,
-    epochs=5
+    epochs=5,
 )
-
 
 # ============================================================
 # 9. EVALUATE MODEL
@@ -153,17 +124,14 @@ loss, accuracy = model.evaluate(
 print()
 print("Validation Accuracy:", accuracy)
 
-
 # ============================================================
 # 10. SAVE MODEL
 # ============================================================
 
-model.save(
-    "cat_dog_cnn.keras"
-)
+model.save("cat_dog_cnn_model.keras")
 
 print()
 print("===================================")
 print("Model saved successfully!")
-print("File: cat_dog_cnn.keras")
+print("File: cat_dog_cnn_model.keras")
 print("===================================")

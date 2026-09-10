@@ -2,6 +2,7 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
+print("hello")
 
 # ============================================================
 # Load Environment Variables
@@ -9,13 +10,11 @@ import os
 
 load_dotenv()
 
-
 # ============================================================
 # Read OpenAI API Key
 # ============================================================
 
 api_key = os.getenv("OPENAI_API_KEY")
-
 
 # ============================================================
 # Create OpenAI Client
@@ -23,16 +22,14 @@ api_key = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=api_key)
 
-
 # ============================================================
 # Function to Call GPT Model
 # ============================================================
 
-def ask_gpt(input):
-
-    response = client.responses.create(
-        model="gpt-5-mini",
-        input=input
+def ask_gpt(model, input):
+    response =  client.responses.create(
+            model = model,
+            input = input
     )
-
+    print(response)
     return response.output_text
