@@ -1,0 +1,26 @@
+Python Programming Course
+
+Course Code: PY101
+
+This course teaches Python programming from beginner to advanced level.
+
+Topics:
+
+- Python syntax
+- Variables
+- Data types
+- Conditional statements
+- Loops
+- Functions
+- Object oriented programming
+- Exception handling
+- File handling
+- APIs
+- SQL
+- Python projects
+
+Duration: 3 Months
+
+Mode: Online
+
+The course is suitable for beginners.

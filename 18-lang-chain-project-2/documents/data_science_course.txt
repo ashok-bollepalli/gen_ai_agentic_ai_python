@@ -1,0 +1,45 @@
+Data Science Course
+
+Course Code: DS101
+
+This course teaches Data Science from beginner to advanced level, covering data analysis, visualization, statistics, machine learning, and real-world projects.
+
+Topics:
+
+Introduction to Data Science
+
+Python for Data Science
+
+NumPy
+
+Pandas
+
+Data Cleaning and Preprocessing
+
+Exploratory Data Analysis (EDA)
+
+Data Visualization
+
+Statistics and Probability
+
+SQL for Data Science
+
+Machine Learning
+
+Supervised Learning
+
+Unsupervised Learning
+
+Feature Engineering
+
+Model Evaluation
+
+Introduction to Deep Learning
+
+Real-world Data Science Projects
+
+Duration: 3 Months
+
+Mode: Online
+
+The course is suitable for beginners.

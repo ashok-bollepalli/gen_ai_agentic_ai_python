@@ -1,0 +1,24 @@
+Generative AI Course
+
+Course Code: AI101
+
+The Generative AI course covers:
+
+- Large Language Models
+- OpenAI APIs
+- Prompt engineering
+- LangChain
+- Retrieval Augmented Generation
+- Vector databases
+- Pinecone
+- Embeddings
+- Semantic search
+- AI agents
+- RAG applications
+- Generative AI projects
+
+Duration: 4 Months
+
+Mode: Online
+
+Students should have Python programming knowledge.
