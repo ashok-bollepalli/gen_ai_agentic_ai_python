@@ -1,0 +1,5 @@
+langchain-ollama
+langgraph
+httpx
+streamlit
+python-dotenv
