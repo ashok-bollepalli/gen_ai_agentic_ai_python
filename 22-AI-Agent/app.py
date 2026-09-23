@@ -1,7 +1,6 @@
 import streamlit as st
 
-from customer_support_bot import customer_support
-
+from customer_agent import customer_support
 
 # ==========================================
 # PAGE CONFIG
@@ -9,69 +8,43 @@ from customer_support_bot import customer_support
 
 st.set_page_config(
     page_title="AI Customer Support",
-    page_icon="🤖"
+    page_icon="🤖",
+    layout="centered"
 )
 
-
 # ==========================================
-# TITLE
+# HEADER
 # ==========================================
 
-st.title("🤖 AI Customer Support Agent")
+st.title("🤖 AI Customer Support")
 
 st.write(
-    "Ask me about your order."
+    "Ask questions about your order, check order status, "
+    "or cancel an order."
 )
-
-
-# ==========================================
-# SIDEBAR
-# ==========================================
-
-with st.sidebar:
-
-    st.header("Available Tools")
-
-    st.write("📦 Get Order Status")
-    st.write("❌ Cancel Order")
-
-    st.divider()
-
-    st.write("Try:")
-
-    st.write("Where is my order ORD1001?")
-
-    st.write("Cancel order ORD1003")
-
 
 # ==========================================
 # CHAT HISTORY
 # ==========================================
 
 if "messages" not in st.session_state:
-
     st.session_state.messages = []
 
-
 # ==========================================
-# DISPLAY MESSAGES
+# DISPLAY PREVIOUS MESSAGES
 # ==========================================
 
 for message in st.session_state.messages:
-
     with st.chat_message(message["role"]):
-
         st.write(message["content"])
 
-
 # ==========================================
-# CHAT INPUT
+# USER INPUT
 # ==========================================
 
 question = st.chat_input(
-    "Ask about your order..."
+    "Ask something about your order..."
 )
-
 
 # ==========================================
 # PROCESS QUESTION
@@ -79,19 +52,21 @@ question = st.chat_input(
 
 if question:
 
-    # Show customer message
-
-    with st.chat_message("user"):
-
-        st.write(question)
+    # -------------------------------
+    # Display user message
+    # -------------------------------
 
     st.session_state.messages.append({
         "role": "user",
         "content": question
     })
 
+    with st.chat_message("user"):
+        st.write(question)
 
-    # Get AI response
+    # -------------------------------
+    # AI response
+    # -------------------------------
 
     with st.chat_message("assistant"):
 
@@ -103,16 +78,14 @@ if question:
 
                 st.write(answer)
 
+                # Save response
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": answer
+                })
+
             except Exception as e:
 
-                answer = "Something went wrong."
-
-                st.error(e)
-
-
-    # Save AI response
-
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": answer
-    })
+                st.error(
+                    f"Something went wrong: {str(e)}"
+                )
