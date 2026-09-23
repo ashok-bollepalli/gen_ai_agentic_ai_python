@@ -1,4 +1,5 @@
 import mysql.connector as mysql
+from contextlib import closing
 
 
 DB_CONFIG = {
@@ -10,33 +11,39 @@ DB_CONFIG = {
 
 
 # ==========================================
+# DATABASE CONNECTION
+# ==========================================
+
+def get_connection():
+    return mysql.connect(**DB_CONFIG)
+
+
+# ==========================================
 # GET ORDER STATUS
 # ==========================================
 
 def get_order_status(order_id):
-    connection = mysql.connect(**DB_CONFIG)
-    cursor = connection.cursor()
-
-    cursor.execute("""
-    SELECT order_id, customer_name, product_name, order_status
+    query = """
+        SELECT order_id, customer_name, product_name, order_status
         FROM orders
         WHERE order_id = %s
-    """, (order_id,))
+    """
 
-    order = cursor.fetchone()
+    with closing(get_connection()) as connection:
+        with closing(connection.cursor()) as cursor:
 
-    cursor.close()
-    connection.close()
+            cursor.execute(query, (order_id,))
+            order = cursor.fetchone()
 
-    if order is None:
-        return "Order Not Found"
+            if not order:
+                return "Order Not Found"
 
-    return {
-        "order_id": order[0],
-        "customer_name": order[1],
-        "product_name": order[2],
-        "status" : order[3]
-    }
+            return {
+                "order_id": order[0],
+                "customer_name": order[1],
+                "product_name": order[2],
+                "status": order[3]
+            }
 
 
 # ==========================================
@@ -44,40 +51,39 @@ def get_order_status(order_id):
 # ==========================================
 
 def cancel_order(order_id):
-    connection = mysql.connect(**DB_CONFIG)
-    cursor = connection.cursor()
-    cursor.execute("""
-                   SELECT order_status
-                   FROM orders
-                   WHERE order_id = %s
-                   """, (order_id,))
-    order = cursor.fetchone()
+    select_query = """
+        SELECT order_status
+        FROM orders
+        WHERE order_id = %s
+    """
 
-    if order is None:
-        cursor.close()
-        connection.close()
-        return "Order Not Found"
+    update_query = """
+        UPDATE orders
+        SET order_status = 'CANCELLED'
+        WHERE order_id = %s
+    """
 
-    status = order[0]
+    with closing(get_connection()) as connection:
+        with closing(connection.cursor()) as cursor:
 
-    if status == "DELIVERED":
-        cursor.close()
-        connection.close()
-        return "Order cannot be cancelled because it is already delivered"
+            # Get current order status
+            cursor.execute(select_query, (order_id,))
+            order = cursor.fetchone()
 
-    if status == "CANCELLED":
-        cursor.close()
-        connection.close()
-        return "Order is already cancelled"
+            if not order:
+                return "Order Not Found"
 
-    cursor.execute("""
-                   UPDATE orders
-                   SET order_status = 'CANCELLED'
-                   WHERE order_id = %s
-                   """, (order_id,))
+            status = order[0]
 
-    connection.commit()
-    cursor.close()
-    connection.close()
+            # Validate order status
+            if status == "DELIVERED":
+                return "Order cannot be cancelled because it is already delivered"
 
-    return "Order Cancelled Successfully"
+            if status == "CANCELLED":
+                return "Order is already cancelled"
+
+            # Cancel order
+            cursor.execute(update_query, (order_id,))
+            connection.commit()
+
+            return "Order Cancelled Successfully"
