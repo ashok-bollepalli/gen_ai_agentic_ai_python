@@ -1,17 +1,18 @@
 import os
 
 from dotenv import load_dotenv
-
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 
 import db_service
 
+
 # ==========================================
-# LOAD API KEY
+# LOAD ENVIRONMENT VARIABLES
 # ==========================================
 
 load_dotenv()
+
 api_key = os.getenv("OPENAI_API_KEY")
 
 
@@ -21,18 +22,28 @@ api_key = os.getenv("OPENAI_API_KEY")
 
 @tool
 def get_order_status(order_id: str):
-    """Get the status of the order"""
+    """Get the current status and details of an ecommerce order."""
     return db_service.get_order_status(order_id)
 
 
 @tool
 def cancel_order(order_id: str):
-    """Cancel an order"""
+    """Cancel an ecommerce order using the order ID."""
     return db_service.cancel_order(order_id)
 
 
 # ==========================================
-# CREATE LLM Client
+# TOOL REGISTRY
+# ==========================================
+
+TOOLS = {
+    get_order_status.name: get_order_status,
+    cancel_order.name: cancel_order
+}
+
+
+# ==========================================
+# CREATE LLM
 # ==========================================
 
 llm = ChatOpenAI(
@@ -41,89 +52,90 @@ llm = ChatOpenAI(
     use_responses_api=True
 )
 
-# ==========================================
-# GIVE TOOLS TO AI
-# ==========================================
+llm_with_tools = llm.bind_tools(
+    list(TOOLS.values())
+)
 
-llm = llm.bind_tools([
-    get_order_status,
-    cancel_order
-])
 
 # ==========================================
-# GET TEXT FROM RESPONSE
+# GET RESPONSE TEXT
 # ==========================================
 
 def get_text(response):
 
-    # normal string response
     if isinstance(response.content, str):
         return response.content
 
-    # Structured response
-
     for item in response.content:
-        if isinstance(item, dict):
-            if item.get("type") == "text":
-                return item.get("text", "")
+        if isinstance(item, dict) and item.get("type") == "text":
+            return item.get("text", "")
 
     return str(response.content)
 
 
 # ==========================================
-# CUSTOMER SUPPORT Agent
+# CUSTOMER SUPPORT
 # ==========================================
 
 def customer_support(question):
-    # ask AI
-    response = llm.invoke(question)
-
-    print("Response:", response)
 
     # --------------------------------------
-    # No tool required
+    # STEP 1: Ask LLM
     # --------------------------------------
+
+    response = llm_with_tools.invoke(question)
+
+    print("AI Response:", response)
+
+    # --------------------------------------
+    # STEP 2: No Tool Required
+    # --------------------------------------
+
     if not response.tool_calls:
         return get_text(response)
 
     # --------------------------------------
-    # AI selected a tool
+    # STEP 3: Execute Tool
     # --------------------------------------
 
-    tool_call = response.tool_calls[0]
-    tool_name = tool_call["name"]
-    tool_args = tool_call["args"]
+    tool_results = []
+
+    for tool_call in response.tool_calls:
+
+        tool_name = tool_call["name"]
+        tool_args = tool_call["args"]
+
+        selected_tool = TOOLS.get(tool_name)
+
+        if selected_tool is None:
+            return f"Unknown tool: {tool_name}"
+
+        result = selected_tool.invoke(tool_args)
+
+        tool_results.append(
+            f"Tool: {tool_name}\n"
+            f"Result: {result}"
+        )
 
     # --------------------------------------
-    # Execute tool
-    # --------------------------------------
-    if tool_name == "get_order_status":
-        result = get_order_status.invoke(tool_args)
-    elif tool_name == "cancel_order":
-        result = cancel_order.invoke(tool_args)
-    else:
-        return "Unknown Tool"
-
-    # --------------------------------------
-    # Give result back to AI
+    # STEP 4: Give Tool Result Back to LLM
     # --------------------------------------
 
-    final_response = llm.invoke(
-        f"""
-        Customer question:
-        {question}
+    final_prompt = f"""
+Customer Question:
+{question}
 
-        Tool result:
-        {result}
+Tool Results:
+{chr(10).join(tool_results)}
 
-        Give a simple answer to the customer.
+Answer the customer clearly and simply.
 
-        Do not show JSON.
-        Do not show tool calls.
-        Do not mention internal implementation.
-        """
-    )
+Rules:
+- Do not show JSON.
+- Do not show tool calls.
+- Do not mention internal implementation.
+"""
+
+    final_response = llm.invoke(final_prompt)
 
     return get_text(final_response)
-
-
