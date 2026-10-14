@@ -1,0 +1,30 @@
+india capital is new delhi
+usa capital is washington
+uk capital is london
+france capital is paris
+japan capital is tokyo
+china capital is beijing
+germany capital is berlin
+italy capital is rome
+canada capital is ottawa
+australia capital is canberra
+russia capital is moscow
+brazil capital is brasilia
+south korea capital is seoul
+spain capital is madrid
+portugal capital is lisbon
+nepal capital is kathmandu
+bhutan capital is thimphu
+bangladesh capital is dhaka
+pakistan capital is islamabad
+sri lanka capital is sri jayawardenepura kotte
+thailand capital is bangkok
+singapore capital is singapore
+indonesia capital is jakarta
+malaysia capital is kuala lumpur
+egypt capital is cairo
+kenya capital is nairobi
+nigeria capital is abuja
+argentina capital is buenos aires
+mexico capital is mexico city
+turkey capital is ankara
