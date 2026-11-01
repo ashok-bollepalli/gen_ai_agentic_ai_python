@@ -1,0 +1,31 @@
+# Data analysis
+pandas>=2.2
+numpy>=1.26
+plotly>=5.20
+
+# LLM + RAG
+langchain>=1.0
+langchain-openai>=1.0
+langchain-community>=0.4
+langchain-text-splitters>=1.0
+langchain-chroma>=1.0
+chromadb>=1.0
+
+# Agent
+langgraph>=1.0
+
+# MCP
+mcp>=1.20
+langchain-mcp-adapters>=0.2
+
+# Database (MySQL)
+sqlalchemy>=2.0
+pymysql>=1.1
+cryptography>=42   # needed by PyMySQL for MySQL 8 login
+
+# API + UI
+fastapi>=0.115
+uvicorn>=0.30
+streamlit>=1.40
+requests>=2.31
+python-dotenv>=1.0
