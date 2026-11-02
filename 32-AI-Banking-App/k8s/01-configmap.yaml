@@ -9,7 +9,7 @@ data:
   OPENAI_EMBEDDING_MODEL: "text-embedding-3-small"
   DB_HOST: "your-db.xxxxxxxx.ap-south-1.rds.amazonaws.com"   # <-- AWS RDS endpoint
   DB_PORT: "3306"
-  DB_NAME: "bankdb"
+  DB_NAME: "bank_db"
   MCP_SERVER_URL: "http://mcp-service:8001/mcp"              # K8s service DNS
   API_URL: "http://api-service:8000"
   CHROMA_DIR: "/tmp/chroma_db"
