@@ -1,0 +1,20 @@
+# One-time Job: create tables + load sample data into AWS RDS
+# kubectl apply -f k8s/06-seed-job.yaml
+# kubectl logs -n bankbuddy job/seed-data
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: seed-data
+  namespace: bankbuddy
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: seed
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          command: ["python", "-m", "scripts.seed_data"]
+          envFrom:
+            - configMapRef: { name: bankbuddy-config }
+            - secretRef:    { name: bankbuddy-secret }

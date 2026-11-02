@@ -1,0 +1,52 @@
+# FastAPI backend + LangGraph agent (internal only -> ClusterIP)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: bankbuddy
+spec:
+  # 1 replica because chat memory (LangGraph MemorySaver) lives in pod memory.
+  # To scale out: switch MemorySaver to a shared checkpointer (Postgres/Redis).
+  replicas: 1
+  selector:
+    matchLabels: { app: api }
+  template:
+    metadata:
+      labels: { app: api }
+    spec:
+      containers:
+        - name: api
+          image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          command: ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef: { name: bankbuddy-config }
+            - secretRef:    { name: bankbuddy-secret }
+          volumeMounts:
+            - name: chroma
+              mountPath: /tmp/chroma_db
+          readinessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 5
+          livenessProbe:
+            httpGet: { path: /health, port: 8000 }
+            initialDelaySeconds: 20
+          resources:
+            requests: { cpu: "250m", memory: "512Mi" }
+            limits:   { cpu: "1",    memory: "1Gi" }
+      volumes:
+        - name: chroma          # vector DB rebuilt from knowledge_base on start
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-service
+  namespace: bankbuddy
+spec:
+  type: ClusterIP
+  selector: { app: api }
+  ports:
+    - port: 8000
+      targetPort: 8000

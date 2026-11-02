@@ -1,0 +1,50 @@
+# Local run (laptop). Uses a local MySQL container instead of AWS RDS.
+# Usage:
+#   cp .env.example .env      (set OPENAI_API_KEY)
+#   docker compose up --build
+#   docker compose run --rm api python -m scripts.seed_data   (first time only)
+#   open http://localhost:8501
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: bankdb
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin123
+    ports: ["3306:3306"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      retries: 20
+
+  mcp:
+    build: .
+    command: ["python", "-m", "app.mcp_server.server"]
+    env_file: .env
+    environment: &db_env
+      DB_HOST: mysql
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: bankdb
+    ports: ["8001:8001"]
+    depends_on:
+      mysql: { condition: service_healthy }
+
+  api:
+    build: .
+    env_file: .env
+    environment:
+      <<: *db_env
+      MCP_SERVER_URL: http://mcp:8001/mcp
+      CHROMA_DIR: /tmp/chroma_db
+    ports: ["8000:8000"]
+    depends_on: [mcp]
+
+  ui:
+    build: .
+    command: ["streamlit", "run", "ui/app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+    environment:
+      API_URL: http://api:8000
+    ports: ["8501:8501"]
+    depends_on: [api]

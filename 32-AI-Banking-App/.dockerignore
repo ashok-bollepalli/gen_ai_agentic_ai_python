@@ -1,0 +1,8 @@
+.env
+.venv
+venv
+__pycache__
+*.pyc
+chroma_db
+.git
+k8s
