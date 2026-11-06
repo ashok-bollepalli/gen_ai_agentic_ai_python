@@ -13,7 +13,8 @@ spec:
       restartPolicy: Never
       containers:
         - name: seed
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          #image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          image: ashokit/bankbuddy:1.0
           command: ["python", "-m", "scripts.seed_data"]
           envFrom:
             - configMapRef: { name: bankbuddy-config }

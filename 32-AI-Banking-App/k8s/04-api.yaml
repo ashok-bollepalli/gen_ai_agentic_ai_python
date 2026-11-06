@@ -16,7 +16,8 @@ spec:
     spec:
       containers:
         - name: api
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          #image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          image: ashokit/bankbuddy:1.0
           command: ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
           ports:
             - containerPort: 8000

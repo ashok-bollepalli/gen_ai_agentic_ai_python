@@ -1,4 +1,4 @@
-# Streamlit UI -> exposed to users through an AWS Load Balancer
+# Streamlit UI -> exposed to users through NodePort
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: ui
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          #image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          image: ashokit/bankbuddy:1.0
           command: ["streamlit", "run", "ui/app.py",
                     "--server.port=8501", "--server.address=0.0.0.0", "--server.headless=true"]
           ports:
@@ -38,14 +39,10 @@ kind: Service
 metadata:
   name: ui-service
   namespace: bankbuddy
-  annotations:
-    # AWS Network Load Balancer, internet facing
-    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
-    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
 spec:
-  type: LoadBalancer
-  sessionAffinity: ClientIP          # keep a user on the same Streamlit pod
+  type: NodePort
   selector: { app: ui }
   ports:
     - port: 80
       targetPort: 8501
+      nodePort: 30080

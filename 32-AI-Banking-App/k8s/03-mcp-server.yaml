@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: mcp-server
-          image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          #image: <AWS_ACCOUNT_ID>.dkr.ecr.ap-south-1.amazonaws.com/bankbuddy:1.0
+          image: ashokit/bankbuddy:1.0
           command: ["python", "-m", "app.mcp_server.server"]
           ports:
             - containerPort: 8001
