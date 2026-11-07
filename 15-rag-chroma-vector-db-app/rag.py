@@ -5,70 +5,76 @@ import chromadb
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# load env variables
+# load env props
 load_dotenv()
 
-# get api key
-api_key = os.getenv("OPENAI_API_KEY")
+# get openai api key
+apikey = os.getenv("OPENAI_API_KEY")
 
-# Create OpenAI Client
-client = OpenAI(api_key=api_key)
+# get open ai embedding model
+embedding_model = os.getenv("EMBEDDING_MODEL")
 
-# Create Persistent ChromaDB Client
-chroma_client = chromadb.PersistentClient(path ="./chroma_db")
+# get open ai llm model
+llm_model = os.getenv("LLM_MODEL")
 
-# Create or get collection
+# create OpenAI api client
+client = OpenAI(api_key=apikey)
+
+# create Chroma DB Client
+chroma_client = chromadb.PersistentClient(path="./chroma_db")
+
+# create or get collection
 collection = chroma_client.get_or_create_collection(name="company_documents")
 
-def ask_question(question):
 
-    # create embedding for the question
+def ask_question(question):
+    # convert question to embeddings
     response = client.embeddings.create(
-        model = "text-embedding-3-small",
-        input = question
+        model=embedding_model,
+        input=question
     )
 
     question_embedding = response.data[0].embedding
 
-    # search chroma DB
+    # retrieve
     results = collection.query(
-        query_embeddings = question_embedding,
-        n_results = 3
+        query_embeddings=question_embedding,
+        n_results=3
     )
 
-    print("Results:", results)
+    print("Result : ", results)
 
-    # Get Retrieved Documents
     documents = results["documents"][0]
 
-    print("documents:", documents)
+    context = "\n".join(documents)
 
-    #combine documents into context
-    context = "\n\n".join(documents)
+    print(context)
 
-    print("Context:", context)
+    # create prompt (augmentation)
 
-    # Create RAG Prompt
     prompt = f"""
-    
-    Answer the question using only the context provided below.
-    
-    Context : {context}
-    
-    Question : {question}
+    You are a helpful AI assistant for Ashok IT.
 
-"""
+    Instructions:
+    1. Answer using only the provided context.
+    2. Do not use external knowledge.
+    3. If the answer is not available in the context,
+       respond with "Sorry, I don't have that information."
+    4. Provide clear and concise answers.
 
+    Context:
+    {context}
+
+    Question:
+    {question}
+
+    Answer:
+    """
+
+    # generation
     response = client.responses.create(
-        model = "gpt-6-astra",
-        input = prompt
+        model=llm_model,
+        input=prompt
     )
 
     return response.output_text
-
-# simple test to run
-if __name__ == "__main__":
-    question = input("Ask a question:")
-    answer = ask_question(question)
-
-    print(answer)

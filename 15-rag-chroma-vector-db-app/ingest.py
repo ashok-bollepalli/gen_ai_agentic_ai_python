@@ -5,42 +5,52 @@ import chromadb
 from dotenv import load_dotenv
 from openai import OpenAI
 
-# load env variables
+# load env props
 load_dotenv()
 
-# get api key
-api_key = os.getenv("OPENAI_API_KEY")
+# get openai api key
+apikey  = os.getenv("OPENAI_API_KEY")
 
-# Create OpenAI Client
-client = OpenAI(api_key=api_key)
+# get open ai embedding model
+embedding_model = os.getenv("EMBEDDING_MODEL")
 
-# Create Persistent ChromaDB Client
-chroma_client = chromadb.PersistentClient(path ="./chroma_db")
+# create OpenAI api client
+client = OpenAI(api_key=apikey)
 
-# Create or get collection
+# create Chroma DB Client
+chroma_client = chromadb.PersistentClient(path="./chroma_db")
+
+# create or get collection
 collection = chroma_client.get_or_create_collection(name="company_documents")
 
 # read document
-with open("documents/company.txt", "r", encoding="utf-8") as file:
-    document = file.read()
+# split into chunks
+# generate embeddings
+# store embeddings into chroma collection
 
-    # split document into chunks
-    chunks = document.split("\n\n")
+with open("documents/company.txt", "r") as file:
+    data = file.read()
 
-    #Generate embeddings and store them
+    chunks = data.split("\n")
+
+    #print(chunks)
 
     for index, chunk in enumerate(chunks):
+
+        # convert each chunk into embdding
         response = client.embeddings.create(
-            model = "text-embedding-3-small",
-            input = chunk,
+            model = embedding_model,
+            input = chunk
         )
 
         embedding = response.data[0].embedding
 
         collection.add(
-            ids =[f"chunk-{index}"],
+            ids = [f"chunk_{index}"],
             documents = [chunk],
-            embeddings = embedding
+            embeddings=embedding
         )
 
 print("Document successfully stored in ChromaDB.")
+
+
