@@ -1,127 +1,72 @@
-import os
 
-from dotenv import load_dotenv
+from pathlib import Path
+from uuid import uuid4
+
 from openai import OpenAI
 from pinecone import Pinecone, ServerlessSpec
+from pypdf import PdfReader
+
+from config import *
+
+# Initialize OpenAI and Pinecone
+client = OpenAI(api_key=OPENAI_API_KEY)
+pc = Pinecone(api_key=PINECONE_API_KEY)
 
 
-# ============================================================
-# Load environment variables
-# ============================================================
-
-load_dotenv()
-
-
-# ============================================================
-# Get API keys
-# ============================================================
-
-openai_api_key = os.getenv("OPENAI_API_KEY")
-pinecone_api_key = os.getenv("PINECONE_API_KEY")
-
-
-# ============================================================
-# Create OpenAI Client
-# ============================================================
-
-client = OpenAI(api_key=openai_api_key)
-
-
-# ============================================================
-# Create Pinecone Client
-# ============================================================
-
-pc = Pinecone(api_key=pinecone_api_key)
-
-
-# ============================================================
-# Pinecone Index Configuration
-# ============================================================
-
-index_name = "company-documents"
-
-dimension = 1536
-
-
-# ============================================================
-# Create Index if it doesn't exist
-# ============================================================
-
-if not pc.has_index(index_name):
-
+# 1. Create Pinecone Index
+if INDEX_NAME not in pc.list_indexes().names():
     pc.create_index(
-        name=index_name,
-        dimension=dimension,
+        name=INDEX_NAME,
+        dimension=EMBEDDING_DIMENSION,
         metric="cosine",
         spec=ServerlessSpec(
-            cloud="aws",
-            region="us-east-1"
+            cloud=PINECONE_CLOUD,
+            region=PINECONE_REGION
         )
     )
 
-
-# ============================================================
-# Connect to Index
-# ============================================================
-
-index = pc.Index(index_name)
+index = pc.Index(INDEX_NAME)
 
 
-# ============================================================
-# Read Document
-# ============================================================
+# 2. Read PDF Files
+chunks = []
 
-with open(
-    "documents/company.txt",
-    "r",
-    encoding="utf-8"
-) as file:
+for pdf in Path("documents").glob("*.pdf"):
 
-    document = file.read()
+    reader = PdfReader(str(pdf))
 
+    for page_no, page in enumerate(reader.pages, 1):
 
-# ============================================================
-# Split Document into Chunks
-# ============================================================
+        text = page.extract_text()
 
-chunks = document.split("\n\n")
-
-
-# ============================================================
-# Generate Embeddings and Store in Pinecone
-# ============================================================
-
-vectors = []
+        if text:
+            chunks.append({
+                "text": text,
+                "source": pdf.name,
+                "page": page_no
+            })
 
 
-for index_number, chunk in enumerate(chunks):
+# 3. Generate Embeddings and Upload to Pinecone
+for chunk in chunks:
 
-    # Generate embedding
     response = client.embeddings.create(
-        model="text-embedding-3-small",
-        input=chunk
+        model=EMBEDDING_MODEL,
+        input=chunk["text"]
     )
 
     embedding = response.data[0].embedding
 
+    index.upsert(
+        vectors=[{
+            "id": str(uuid4()),
+            "values": embedding,
+            "metadata": chunk
+        }],
+        namespace=NAMESPACE
+    )
 
-    # Create Pinecone vector
-    vectors.append({
-        "id": f"chunk-{index_number}",
-        "values": embedding,
-        "metadata": {
-            "text": chunk
-        }
-    })
-
-
-# ============================================================
-# Upload vectors to Pinecone
-# ============================================================
-
-index.upsert(
-    vectors=vectors
-)
+    print("Uploaded:", chunk["source"], "Page:", chunk["page"])
 
 
-print("Document successfully stored in Pinecone.")
+print("PDF ingestion completed successfully!")

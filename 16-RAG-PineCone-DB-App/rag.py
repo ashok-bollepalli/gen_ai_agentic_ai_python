@@ -1,145 +1,78 @@
-import os
 
-from dotenv import load_dotenv
 from openai import OpenAI
 from pinecone import Pinecone
 
+from config import *
 
-# ============================================================
-# Load environment variables
-# ============================================================
+# Initialize OpenAI
+client = OpenAI(api_key=OPENAI_API_KEY)
 
-load_dotenv()
+# Initialize Pinecone
+pc = Pinecone(api_key=PINECONE_API_KEY)
+index = pc.Index(INDEX_NAME)
 
-
-# ============================================================
-# Get API keys
-# ============================================================
-
-openai_api_key = os.getenv("OPENAI_API_KEY")
-pinecone_api_key = os.getenv("PINECONE_API_KEY")
-
-
-# ============================================================
-# Create OpenAI Client
-# ============================================================
-
-client = OpenAI(api_key=openai_api_key)
-
-
-# ============================================================
-# Create Pinecone Client
-# ============================================================
-
-pc = Pinecone(api_key=pinecone_api_key)
-
-
-# ============================================================
-# Connect to Pinecone Index
-# ============================================================
-
-index = pc.Index("company-documents")
-
-
-# ============================================================
-# Ask Question Function
-# ============================================================
 
 def ask_question(question):
 
-    # --------------------------------------------------------
-    # Create embedding for the question
-    # --------------------------------------------------------
-
-    response = client.embeddings.create(
-        model="text-embedding-3-small",
+    # 1. Convert question into embedding
+    embedding = client.embeddings.create(
+        model=EMBEDDING_MODEL,
         input=question
-    )
+    ).data[0].embedding
 
-    question_embedding = response.data[0].embedding
-
-
-    # --------------------------------------------------------
-    # Search Pinecone
-    # --------------------------------------------------------
-
+    # 2. Search similar content in Pinecone
     results = index.query(
-        vector=question_embedding,
-        top_k=3,
-        include_metadata=True
+        vector=embedding,
+        top_k=4,
+        include_metadata=True,
+        namespace=NAMESPACE
     )
 
-    print("Results:", results)
+    # 3. Collect relevant PDF content
+    context = ""
 
+    for match in results.matches:
 
-    # --------------------------------------------------------
-    # Get Retrieved Documents
-    # --------------------------------------------------------
+        if match.metadata and match.metadata.get("text"):
+            context += match.metadata["text"] + "\n\n"
 
-    documents = []
+    # 4. Check whether context is available
+    if not context:
+        return "Sorry, I couldn't find the answer in the documents."
 
-    for match in results["matches"]:
-
-        document = match["metadata"]["text"]
-
-        documents.append(document)
-
-
-    print("Documents:", documents)
-
-
-    # --------------------------------------------------------
-    # Combine Documents into Context
-    # --------------------------------------------------------
-
-    context = "\n\n".join(documents)
-
-    print("Context:", context)
-
-
-    # --------------------------------------------------------
-    # Create RAG Prompt
-    # --------------------------------------------------------
-
-    prompt = f"""
-
-    Answer the question using only the context provided below.
-
-    Context:
-    {context}
-
-    Question:
-    {question}
-
-    """
-
-
-    # --------------------------------------------------------
-    # Send Prompt to GPT
-    # --------------------------------------------------------
-
+    # 5. Send context and question to OpenAI
     response = client.responses.create(
-        model="gpt-6-astra",
-        input=prompt
+        model=CHAT_MODEL,
+        instructions="""
+        You are a helpful customer support assistant.
+        Answer questions using only the given context.
+        If information is not available, say you don't know.
+        Do not invent any information.
+        """,
+        input=f"""
+        Context:
+        {context}
+
+        Question:
+        {question}
+
+        Answer:
+        """
     )
-
-
-    # --------------------------------------------------------
-    # Return Answer
-    # --------------------------------------------------------
 
     return response.output_text
 
 
-# ============================================================
-# Simple Test to Run
-# ============================================================
-
+# Test chatbot
 if __name__ == "__main__":
 
-    question = input("Ask a question: ")
+    while True:
 
-    answer = ask_question(question)
+        question = input("\nAsk your question (type exit to stop): ")
 
-    print("\nAnswer:")
-    print(answer)
+        if question.lower() == "exit":
+            break
+
+        answer = ask_question(question)
+
+        print("\nChatbot:", answer)
