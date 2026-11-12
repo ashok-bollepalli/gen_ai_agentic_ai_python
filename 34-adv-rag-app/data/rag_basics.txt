@@ -1,0 +1,11 @@
+Retrieval-Augmented Generation (RAG)
+
+RAG stands for Retrieval-Augmented Generation. It connects a large language model to external knowledge sources such as PDFs, documents, websites, and databases.
+
+During indexing, documents are loaded, split into chunks, converted into embeddings, and stored in a searchable index. During question answering, the user's query is converted into an embedding, relevant chunks are retrieved, and the language model uses those chunks as context to generate an answer.
+
+Chunking divides large documents into smaller text pieces. Chunk size controls the approximate size of each piece. Chunk overlap repeats a small amount of text between neighboring chunks to reduce the chance of losing context at boundaries.
+
+Semantic search retrieves information based on meaning using vector embeddings. Keyword search retrieves information based on matching terms. Hybrid search combines semantic search and keyword search.
+
+RAG can reduce unsupported answers by grounding generation in retrieved information, but it does not guarantee correctness. The quality of answers depends on document quality, chunking, retrieval, prompts, and evaluation.

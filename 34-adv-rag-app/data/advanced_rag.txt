@@ -1,0 +1,11 @@
+Advanced RAG Techniques
+
+Advanced RAG improves the retrieval and generation pipeline with techniques that make search more relevant and context-aware.
+
+Query rewriting reformulates a user's question into a clearer search query. Query expansion creates additional related search terms or query variations. Query decomposition breaks a complex question into smaller questions.
+
+Fixed-size chunking splits text according to a configured size. Recursive chunking tries separators such as paragraphs and lines to preserve structure. Semantic chunking groups text based on meaning. Parent-child chunking retrieves a small child chunk and can provide its larger parent section as context.
+
+BM25 is a keyword-ranking algorithm. Vector search uses embeddings to compare semantic similarity. Hybrid search combines keyword and vector retrieval. Reranking takes an initial set of candidate results and reorders them based on their relevance to the query.
+
+A grounded RAG answer should use retrieved context, avoid inventing missing facts, and identify its sources. Retrieval evaluation can measure whether retrieved chunks are relevant and whether the answer is supported by the evidence.

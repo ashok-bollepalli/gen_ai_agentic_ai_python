@@ -1,0 +1,15 @@
+Ashok IT - Gen AI and Agentic AI Course
+
+The Gen AI and Agentic AI course introduces students to Python programming, machine learning fundamentals, deep learning basics, large language models, prompt engineering, generative AI applications, retrieval-augmented generation, and AI agents.
+
+Python topics include variables, data types, functions, object-oriented programming, exception handling, and libraries such as NumPy, Pandas, and Matplotlib.
+
+The machine learning module introduces supervised learning, unsupervised learning, model training, model evaluation, and common algorithms. Deep learning topics include neural networks and introductory model architectures.
+
+The LLM module covers tokens, embeddings, transformers at a conceptual level, prompt engineering, and working with language model APIs.
+
+The RAG module covers document loading, text splitting, embeddings, vector search, retrieval, and answer generation. Advanced RAG topics include query rewriting, semantic chunking, hybrid search, reranking, and evaluation.
+
+The Agentic AI module introduces tools, agents, workflows, LangChain, LangGraph, and the Model Context Protocol (MCP). Students learn how an agent can select tools, perform tasks, and use results to continue a workflow.
+
+The deployment module introduces Git, Docker, Kubernetes concepts, APIs, and application deployment fundamentals.

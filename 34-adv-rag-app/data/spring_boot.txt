@@ -1,0 +1,9 @@
+Spring Boot and Dependency Injection
+
+Spring Boot is a Java framework that simplifies the creation of stand-alone, production-ready Spring applications. It provides auto-configuration, starter dependencies, and embedded server support.
+
+Dependency Injection is a design pattern in which an object receives the dependencies it needs from an external container rather than creating those dependencies itself. In Spring, the IoC container manages application objects called beans.
+
+Constructor injection is commonly recommended because it makes required dependencies explicit and supports immutable fields. The @Component annotation marks a class as a Spring-managed component. Specialized annotations include @Service for service-layer classes and @Repository for persistence-layer classes.
+
+Spring Security supports authentication and authorization. Authentication verifies who a user is. Authorization determines what an authenticated user is allowed to access. JWT is a token format often used to carry claims between a client and a server.
