@@ -1,89 +1,154 @@
-# Beginner Advanced RAG - Clean Architecture
+# Customer Support Assistant using Corrective RAG
 
-This version is designed for Python beginners. It uses simple functions and dictionaries. It does not use classes or custom OOP.
+A beginner-friendly Python project that answers customer questions from PDF documents using:
+- PDF text extraction
+- Simple text chunking
+- OpenAI embeddings
+- ChromaDB vector database
+- Corrective RAG (relevance grading + query rewriting + second retrieval)
+- OpenAI chat model
+- Streamlit user interface
 
-## Folder structure
+## 1. Architecture
 
 ```text
-advanced_rag/
-│
-├── app.py
-├── domain/
-├── application/
-│   ├── chunking.py
-│   ├── ingest.py
-│   └── retrieve.py
-├── infrastructure/
-│   ├── config.py
-│   ├── document_loader.py
-│   ├── openai_service.py
-│   ├── chroma_store.py
-│   └── bm25_search.py
-├── data/
-├── requirements.txt
-└── README.md
+PDF files
+   |
+   v
+PDF Loader -> Text Chunker -> OpenAI Embeddings -> ChromaDB
+                                                   ^
+                                                   |
+Customer Question -> Initial Retrieval ------------+
+                         |
+                         v
+                 Relevance Checker
+                   /          \
+             Relevant       Not relevant
+                |                |
+                |          Rewrite Question
+                |                |
+                |          Second Retrieval
+                |                |
+                |          Relevance Checker
+                |             /       \
+                |        Relevant   Not relevant
+                |            |          |
+                +------------+          v
+                     |          Safe "not found" response
+                     v
+              Answer Generator
+                     |
+                     v
+             Customer Answer
 ```
 
-`domain/` is intentionally empty in this first beginner version because the workflow uses simple dictionaries instead of custom model classes.
+## 2. Clean architecture (simple version)
 
-## Setup
+```text
+project/
+|-- app.py
+|-- data/
+|-- chroma_db/                 # created automatically
+|-- src/
+    |-- config.py              # API and model configuration
+    |-- ingestion/
+    |   |-- pdf_loader.py      # reads PDF files
+    |   |-- chunker.py         # splits text into chunks
+    |-- vector_store/
+    |   |-- chroma_store.py    # embeddings and vector search
+    |-- rag/
+        |-- corrective_rag.py  # retrieval correction and answer generation
+```
 
-1. Install Python 3.10 or later.
-2. Create a virtual environment.
-3. Install dependencies:
+Each folder has one responsibility. The code uses simple functions instead of classes so beginners can follow the flow.
+
+## 3. Setup
+
+Use Python 3.10 or later.
+
+### Windows
 
 ```bash
+python -m venv venv
+venv\\Scripts\\activate
 pip install -r requirements.txt
 ```
 
-4. Open `infrastructure/config.py` and replace the placeholder with your OpenAI API key.
-5. Run:
+### Configure API key
+
+Copy `.env.example` to `.env` and add your OpenAI API key:
+
+```env
+OPENAI_API_KEY=your_real_api_key
+CHAT_MODEL=gpt-4.1-mini
+EMBEDDING_MODEL=text-embedding-3-small
+```
+
+## 4. Add PDFs
+
+Copy your customer documents into the `data/` folder. For example:
+- product_manual.pdf
+- refund_policy.pdf
+- shipping_policy.pdf
+- customer_faq.pdf
+
+The PDFs should contain selectable text. Scanned PDFs need OCR before ingestion.
+
+## 5. Run
 
 ```bash
 streamlit run app.py
 ```
 
-6. Click **Ingest / Rebuild Documents** in the sidebar.
-7. Ask a question.
+1. Click **Index PDFs** in the sidebar.
+2. Enter a customer question.
+3. Click **Get answer**.
+4. Expand **View source chunks** to inspect the retrieved text.
 
-## What students learn
+## 6. Corrective RAG explained
 
-| File | Concept |
-|---|---|
-| `document_loader.py` | Read TXT documents |
-| `chunking.py` | Split documents into chunks |
-| `openai_service.py` | Embeddings, query rewriting, reranking, answer |
-| `chroma_store.py` | Store and search vectors |
-| `bm25_search.py` | Keyword search |
-| `ingest.py` | Document ingestion workflow |
-| `retrieve.py` | Advanced retrieval workflow |
-| `app.py` | User interface |
+Basic RAG retrieves chunks and immediately generates an answer.
 
-## Why ChromaDB?
+Corrective RAG adds a quality check:
 
-ChromaDB is a persistent vector database. It saves embeddings, text and metadata in the local `chroma_db` folder. It is not necessary to regenerate document embeddings for every question. Re-ingest only when source documents change.
+1. Retrieve the top matching chunks from ChromaDB.
+2. Ask the LLM to grade whether those chunks are useful for the question.
+3. If relevant, generate an answer from those chunks.
+4. If not relevant, rewrite the question into a better search query.
+5. Search ChromaDB again using the rewritten query.
+6. Grade the second retrieval.
+7. If the second retrieval is still weak, do not guess. Return a safe "not found" message.
 
-BM25 is rebuilt from the TXT files in memory when a question is asked. This keeps the demo easy to understand. For a larger application, persist the keyword index too.
+This demo uses a second retrieval as its correction strategy. It does not search the public web because customer support answers should stay grounded in the supplied company documents.
 
-## Advanced RAG techniques shown
+## 7. Teaching example
 
-1. Query rewriting
-2. Chunking with overlap
-3. OpenAI embeddings
-4. ChromaDB semantic search
-5. BM25 keyword search
-6. Hybrid search using Reciprocal Rank Fusion (RRF)
-7. LLM-based reranking
-8. Grounded answer generation with source names
+Question: "Can I return a product after 20 days?"
 
-## Sample questions
+- First retrieval may return general product information.
+- Relevance checker decides that the chunks do not explain the return period.
+- Query rewriter may produce: "product return eligibility return window number of days".
+- ChromaDB performs a second search.
+- If the refund policy PDF contains the answer, the assistant responds using that policy.
+- If no useful policy is found, the assistant says it cannot find the information.
 
-- What topics are covered in the Gen AI course?
-- Explain hybrid search.
-- What is chunk overlap?
-- Explain Spring Boot dependency injection.
-- What is the difference between semantic search and keyword search?
+## 8. Important beginner notes
 
-## Teaching note
+- **Chunking:** splits long PDF pages into smaller pieces for search.
+- **Embedding:** converts text into number vectors that represent meaning.
+- **Vector database:** stores vectors and finds semantically similar chunks.
+- **Relevance grading:** checks whether retrieved chunks can answer the question.
+- **Query rewriting:** improves the search phrase when the first search is poor.
+- **Grounded generation:** tells the LLM to answer only from retrieved PDF content.
 
-This is an educational demo. It uses simple character chunking and an LLM-based reranking prompt so learners can inspect the logic. A production system should use stronger document parsing, persistent keyword indexing, a dedicated reranker, evaluation, security controls and monitoring.
+## 9. Demo limitations / production improvements
+
+This is a classroom demo, not a production support system. For production:
+- Add OCR for scanned PDFs.
+- Use stronger chunking that respects headings and paragraphs.
+- Keep document IDs and versions; update only changed documents instead of deleting the collection.
+- Add metadata filters for product, language, and document version.
+- Add citations with exact page numbers in the final answer.
+- Add authentication, logging, rate limits, evaluation datasets, and human handoff.
+- Consider hybrid search and a reranker for larger document collections.
+- Do not expose API keys in frontend code.

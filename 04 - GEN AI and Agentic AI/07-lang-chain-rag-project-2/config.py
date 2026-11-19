@@ -8,7 +8,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
-PINECONE_INDEX_NAME = "ashok-it-knowledge"
+PINECONE_INDEX_NAME = "ashok-it-gen-ai-knowledge"
 
 LLM_MODEL = "gpt-5.6"
 

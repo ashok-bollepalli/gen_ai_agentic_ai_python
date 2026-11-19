@@ -4,9 +4,8 @@ from llm import llm
 from vector_store import retriever
 from prompts import RAG_PROMPT
 
-
 # =====================================================
-# CREATE RAG CHAIN
+# CREATE Lang CHAIN Pipeline
 # =====================================================
 
 chain = RAG_PROMPT | llm | StrOutputParser()
@@ -17,51 +16,23 @@ chain = RAG_PROMPT | llm | StrOutputParser()
 # =====================================================
 
 def explain_topic(topic):
-
-    # ---------------------------------------------
-    # Validate input
-    # ---------------------------------------------
-
-    if not topic or not topic.strip():
-        return "Please enter a topic."
-
-
-    # ---------------------------------------------
-    # Retrieve documents from Pinecone
-    # ---------------------------------------------
-
+    # get docs from pinecone
     documents = retriever.invoke(topic)
 
-
-    # ---------------------------------------------
-    # Check if documents were found
-    # ---------------------------------------------
+    # check if docs found or not
 
     if not documents:
-        return (
-            "I could not find this information "
-            "in the provided knowledge base."
-        )
-
-
-    # ---------------------------------------------
-    # Create context
-    # ---------------------------------------------
+        return ("I don't have enough info abt this topic")
 
     context = "\n\n".join(
         document.page_content
         for document in documents
     )
 
-
-    # ---------------------------------------------
-    # Send context + question to LLM
-    # ---------------------------------------------
-
+    # invoke lang chain pipeline
     answer = chain.invoke({
         "topic": topic,
         "context": context
     })
-
 
     return answer

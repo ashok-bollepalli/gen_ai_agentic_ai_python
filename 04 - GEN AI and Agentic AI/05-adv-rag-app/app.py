@@ -1,59 +1,42 @@
 import streamlit as st
+from src.ingestion.pdf_loader import load_pdf_folder
+from src.ingestion.chunker import split_into_chunks
+from src.vector_store.chroma_store import create_vector_store
+from src.rag.corrective_rag import answer_customer_question
 
-from infrastructure.config import OPENAI_API_KEY, CHAT_MODEL
-from infrastructure.document_loader import load_documents
-from infrastructure.chroma_store import add_chunks, search_vectors, get_chunk_count, clear_database
-from infrastructure.bm25_search import search_bm25
-from infrastructure.openai_service import rewrite_query, rerank_chunks, generate_answer
-from application.chunking import create_chunks
-from application.ingest import ingest_documents
-from application.retrieve import retrieve_documents
+st.set_page_config(page_title="Customer Support - Corrective RAG", page_icon="📄")
+st.title("📄 Customer Support Assistant")
+st.caption("Ask questions using your PDF documentation. Powered by Corrective RAG.")
 
-st.set_page_config(page_title="Beginner Advanced RAG", page_icon="🧠")
-st.title("🧠 Advanced RAG - Beginner Project")
-st.write("Query Rewriting + ChromaDB + BM25 + Hybrid Search + Reranking")
+if "vector_store" not in st.session_state:
+    st.session_state.vector_store = None
 
-if not OPENAI_API_KEY:
-    st.error("Set OPENAI_API_KEY in infrastructure/config.py first.")
-    st.stop()
+with st.sidebar:
+    st.header("1. Load PDF documents")
+    if st.button("Index PDFs", use_container_width=True):
+        with st.spinner("Reading PDFs and creating the vector database..."):
+            documents = load_pdf_folder("data")
+            if not documents:
+                st.error("Add at least one PDF file to the data/ folder.")
+            else:
+                chunks = split_into_chunks(documents)
+                st.session_state.vector_store = create_vector_store(chunks)
+                st.success(f"Indexed {len(chunks)} text chunks.")
+    st.info("Put your customer manuals, FAQs, policies, and product PDFs inside the data/ folder.")
 
-st.sidebar.header("Knowledge Base")
-st.sidebar.write(f"Stored chunks in ChromaDB: {get_chunk_count()}")
-
-if st.sidebar.button("Ingest / Rebuild Documents"):
-    with st.spinner("Reading documents, splitting chunks and saving embeddings..."):
-        total = ingest_documents()
-    st.sidebar.success(f"Indexed {total} chunks.")
-    st.rerun()
-
-if get_chunk_count() == 0:
-    st.info("Click 'Ingest / Rebuild Documents' in the sidebar before asking a question.")
-
-question = st.text_input("Ask a question", placeholder="What topics are covered in the Gen AI course?")
-top_k = st.slider("Number of final chunks", 1, 6, 3)
-
-if st.button("Search and Generate Answer", type="primary") and question.strip():
-    with st.spinner("Rewriting query and searching documents..."):
-        result = retrieve_documents(question, top_k)
-
-    st.subheader("1. Query Rewriting")
-    st.write("**Original question:**", question)
-    st.write("**Rewritten question:**", result["rewritten_query"])
-
-    st.subheader("2. Retrieved and Reranked Chunks")
-    for number, chunk in enumerate(result["chunks"], start=1):
-        with st.expander(f"Result {number} - {chunk['metadata'].get('source', 'unknown')}"):
-            st.write(chunk["text"])
-            st.caption(
-                f"Hybrid score: {chunk['hybrid_score']:.4f} | "
-                f"Rerank score: {chunk.get('rerank_score', 0):.1f}"
-            )
-
-    with st.spinner("Generating answer from retrieved context..."):
-        answer = generate_answer(question, result["chunks"])
-
-    st.subheader("3. Final Answer")
-    st.markdown(answer)
-
-st.divider()
-st.caption("Documents → Chunking → Embeddings → ChromaDB + BM25 → Query Rewrite → Hybrid Search → Reranking → Answer")
+st.header("2. Ask a customer question")
+question = st.text_input("Customer question", placeholder="What is your refund policy?")
+if st.button("Get answer", type="primary") and question.strip():
+    if st.session_state.vector_store is None:
+        st.warning("First click 'Index PDFs' in the sidebar.")
+    else:
+        with st.spinner("Checking document relevance and preparing an answer..."):
+            result = answer_customer_question(question, st.session_state.vector_store)
+        st.subheader("Answer")
+        st.write(result["answer"])
+        st.caption(f"Retrieval status: {result['status']}")
+        if result["sources"]:
+            with st.expander("View source chunks"):
+                for i, source in enumerate(result["sources"], 1):
+                    st.markdown(f"**Source {i}**")
+                    st.write(source)

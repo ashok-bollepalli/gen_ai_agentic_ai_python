@@ -1,0 +1,5 @@
+streamlit
+mysql-connector-python
+numpy
+pandas
+matplotlib
