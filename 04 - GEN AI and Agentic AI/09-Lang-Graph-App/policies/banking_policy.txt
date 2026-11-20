@@ -1,0 +1,25 @@
+SAMPLE BANKING POLICY - FICTIONAL TRAINING DOCUMENT
+
+This document is fictional sample content for learning RAG. It is not an actual bank policy.
+
+SAVINGS ACCOUNT:
+For this sample only, the illustrative minimum balance is INR 2,000.
+Account opening may require identity proof, address proof, PAN or Form 60 where applicable,
+a completed application and customer due diligence. Actual requirements depend on current
+bank policy and applicable rules.
+
+KYC:
+Customer identity must be verified using the bank's approved KYC process before account activation.
+Employees must follow the current official policy and escalate exceptions to compliance.
+
+LOST DEBIT CARD:
+If a customer reports a lost card, guide them to the bank's approved card-blocking channel
+immediately. Never ask for or record a PIN, CVV or OTP.
+
+ACCOUNT CLOSURE:
+Account closure requires a verified customer request, identity checks, settlement of applicable
+dues and handling of linked products or standing instructions. Follow the bank's current checklist.
+
+TRANSFER LIMITS:
+NEFT, RTGS and IMPS limits and charges depend on current bank rules, customer channel limits
+and regulatory requirements. Always verify the current official schedule before quoting values.

@@ -1,4 +1,11 @@
+langchain-community
+langchain-text-splitters
+langchain-chroma
+langchain-openai
 langgraph
-langchain-core
-langchain-ollama
-httpx
+streamlit
+sqlalchemy
+pymysql
+python-dotenv
+pandas
+chromadb
